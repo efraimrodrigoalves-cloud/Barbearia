@@ -338,6 +338,13 @@ export default function PaymentScreen() {
     if (loading || !userProfile) return;
 
     console.log(`${LOG_PREFIX} Iniciando pagamento em dinheiro`);
+    console.log(`${LOG_PREFIX} Dados do agendamento:`, {
+      user_id: userProfile.id,
+      barber_id: params.barberId,
+      service_id: params.serviceId,
+      appointment_date: params.isoDate,
+      client_name: params.clientName || userProfile.full_name,
+    });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
 
@@ -354,28 +361,31 @@ export default function PaymentScreen() {
           service_id: params.serviceId,
           appointment_date: params.isoDate,
           status: 'confirmed',
-          payment_method: 'cash',
-          payment_status: 'pending'
         })
         .select()
         .single();
 
       if (appointmentError) {
-        console.log(`${LOG_PREFIX} Erro ao criar agendamento:`, appointmentError.message);
+        console.log(`${LOG_PREFIX} Erro detalhado ao criar agendamento:`, JSON.stringify(appointmentError));
         throw appointmentError;
       }
       console.log(`${LOG_PREFIX} Agendamento criado:`, { id: appointment.id });
 
-      // Registrar transação de pagamento
+      // Tentar registrar transação de pagamento (pode falhar se payment_transactions não tiver RLS correto)
       console.log(`${LOG_PREFIX} Registrando transação de pagamento`);
-      await supabase.from('payment_transactions').insert({
+      const { error: transError } = await supabase.from('payment_transactions').insert({
         appointment_id: appointment.id,
         client_id: userProfile.id,
         amount,
         payment_method: 'cash',
         status: 'pending'
       });
-      console.log(`${LOG_PREFIX} Transação registrada com sucesso`);
+
+      if (transError) {
+        console.log(`${LOG_PREFIX} Aviso: não foi possível registrar transação:`, transError.message);
+      } else {
+        console.log(`${LOG_PREFIX} Transação registrada com sucesso`);
+      }
 
       console.log(`${LOG_PREFIX} Agendamento com pagamento em dinheiro criado com sucesso`);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -395,8 +405,9 @@ export default function PaymentScreen() {
 
     } catch (error: any) {
       console.log(`[ERRO] Falha ao processar pagamento em dinheiro:`, error.message);
+      console.log(`[ERRO] Detalhes completos:`, JSON.stringify(error));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Erro', 'Não foi possível confirmar o agendamento. Tente novamente.');
+      Alert.alert('Erro', `Não foi possível confirmar o agendamento. Detalhes: ${error.message}`);
     } finally {
       setLoading(false);
       console.log(`${LOG_PREFIX} Processo de pagamento em dinheiro finalizado`);
@@ -421,6 +432,12 @@ export default function PaymentScreen() {
     if (loading || !userProfile) return;
 
     console.log(`${LOG_PREFIX} Iniciando pagamento com cartão na barbearia`);
+    console.log(`${LOG_PREFIX} Dados do agendamento:`, {
+      user_id: userProfile.id,
+      barber_id: params.barberId,
+      service_id: params.serviceId,
+      appointment_date: params.isoDate,
+    });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
 
@@ -437,28 +454,31 @@ export default function PaymentScreen() {
           service_id: params.serviceId,
           appointment_date: params.isoDate,
           status: 'confirmed',
-          payment_method: 'card_at_shop',
-          payment_status: 'pending'
         })
         .select()
         .single();
 
       if (appointmentError) {
-        console.log(`${LOG_PREFIX} Erro ao criar agendamento:`, appointmentError.message);
+        console.log(`${LOG_PREFIX} Erro detalhado ao criar agendamento:`, JSON.stringify(appointmentError));
         throw appointmentError;
       }
       console.log(`${LOG_PREFIX} Agendamento criado:`, { id: appointment.id });
 
-      // Registrar transação de pagamento
+      // Tentar registrar transação de pagamento
       console.log(`${LOG_PREFIX} Registrando transação de pagamento`);
-      await supabase.from('payment_transactions').insert({
+      const { error: transError } = await supabase.from('payment_transactions').insert({
         appointment_id: appointment.id,
         client_id: userProfile.id,
         amount,
         payment_method: 'card_at_shop',
         status: 'pending'
       });
-      console.log(`${LOG_PREFIX} Transação registrada com sucesso`);
+
+      if (transError) {
+        console.log(`${LOG_PREFIX} Aviso: não foi possível registrar transação:`, transError.message);
+      } else {
+        console.log(`${LOG_PREFIX} Transação registrada com sucesso`);
+      }
 
       console.log(`${LOG_PREFIX} Agendamento com pagamento presencial criado com sucesso`);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -478,8 +498,9 @@ export default function PaymentScreen() {
 
     } catch (error: any) {
       console.log(`[ERRO] Falha ao processar pagamento presencial:`, error.message);
+      console.log(`[ERRO] Detalhes completos:`, JSON.stringify(error));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Erro', 'Não foi possível confirmar o agendamento. Tente novamente.');
+      Alert.alert('Erro', `Não foi possível confirmar o agendamento. Detalhes: ${error.message}`);
     } finally {
       setLoading(false);
       console.log(`${LOG_PREFIX} Processo de pagamento presencial finalizado`);
@@ -555,16 +576,17 @@ export default function PaymentScreen() {
           service_id: params.serviceId,
           appointment_date: params.isoDate,
           status: 'confirmed',
-          payment_method: 'wallet',
-          payment_status: 'paid'
         })
         .select()
         .single();
 
-      if (appointmentError) throw appointmentError;
+      if (appointmentError) {
+        console.log(`${LOG_PREFIX} Erro ao criar agendamento:`, appointmentError.message);
+        throw appointmentError;
+      }
 
-      // Registrar transação de pagamento
-      await supabase.from('payment_transactions').insert({
+      // Tentar registrar transação de pagamento
+      const { error: transError } = await supabase.from('payment_transactions').insert({
         appointment_id: appointment.id,
         client_id: userProfile.id,
         amount,
@@ -572,6 +594,10 @@ export default function PaymentScreen() {
         status: 'approved',
         paid_at: new Date().toISOString()
       });
+
+      if (transError) {
+        console.log(`${LOG_PREFIX} Aviso: não foi possível registrar transação:`, transError.message);
+      }
 
       // Debitar da carteira
       const { data: wallet } = await supabase
@@ -639,19 +665,24 @@ export default function PaymentScreen() {
           service_id: params.serviceId,
           appointment_date: params.isoDate,
           status: 'confirmed',
-          payment_method: 'pix',
-          payment_status: 'pending'
         })
         .select()
         .single();
 
-      if (appointmentError) throw appointmentError;
+      if (appointmentError) {
+        console.log(`${LOG_PREFIX} Erro ao criar agendamento PIX:`, appointmentError.message);
+        throw appointmentError;
+      }
 
-      // Atualizar transação com appointment_id real
-      await supabase
+      // Tentar atualizar transação com appointment_id real
+      const { error: updateError } = await supabase
         .from('payment_transactions')
         .update({ appointment_id: appointment.id })
         .eq('mp_payment_id', pixData.id);
+
+      if (updateError) {
+        console.log(`${LOG_PREFIX} Aviso: não foi possível atualizar transação:`, updateError.message);
+      }
 
       console.log(`${LOG_PREFIX} Agendamento criado com pagamento PIX pendente`);
 

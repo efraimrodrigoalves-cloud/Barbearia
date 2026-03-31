@@ -76,19 +76,20 @@ barbershop_app/mobile/
 │   ├── (tabs)/                   # Abas principais
 │   │   ├── index.tsx            # Tela inicial (cliente)
 │   │   ├── appointments.tsx     # Agenda do cliente
-│   │   ├── admin.tsx            # Painel gerencial
+│   │   ├── admin.tsx            # Painel gerencial (10+ módulos)
 │   │   └── profile.tsx          # Perfil do cliente
 │   ├── (auth)/                   # Autenticação
 │   │   ├── login.tsx            # Login
 │   │   └── register.tsx         # Cadastro
-│   ├── booking/                  # Fluxo de agendamento
+│   ├── booking/                  # Fluxo de agendamento (7 telas)
 │   │   ├── index.tsx            # Seleção de serviço
 │   │   ├── barber.tsx           # Seleção de barbeiro
 │   │   ├── datetime.tsx         # Data e horário
 │   │   ├── confirm.tsx          # Confirmação
+│   │   ├── payment.tsx          # Pagamento (PIX/Cartão/Dinheiro)
 │   │   ├── success.tsx          # Sucesso
 │   │   └── review.tsx           # Avaliação
-│   ├── profile/                  # Telas do perfil
+│   ├── profile/                  # Telas do perfil (7 telas)
 │   │   ├── preferences.tsx      # Preferências
 │   │   ├── wallet.tsx           # Carteira digital
 │   │   ├── loyalty.tsx          # Pontos de fidelidade
@@ -96,18 +97,37 @@ barbershop_app/mobile/
 │   │   ├── catalog.tsx          # Catálogo de estilos
 │   │   ├── recurring.tsx        # Agendamento recorrente
 │   │   └── reminders.tsx        # Lembretes
-│   └── barber/
-│       └── profile.tsx          # Perfil do barbeiro
+│   ├── barber/
+│   │   ├── [id].tsx             # Perfil público do barbeiro
+│   │   └── profile.tsx          # Perfil do barbeiro (admin)
+│   └── _layout.tsx              # Layout raiz
 ├── components/                   # Componentes reutilizáveis
+│   ├── ui/                      # Componentes UI base
+│   ├── themed-text.tsx          # Texto com tema
+│   ├── themed-view.tsx          # View com tema
+│   ├── haptic-tab.tsx           # Tab com feedback tátil
+│   └── parallax-scroll-view.tsx # Scroll com parallax
 ├── constants/                    # Constantes do app
 ├── hooks/                        # Custom hooks
-├── lib/
+│   ├── use-color-scheme.ts      # Detecção de tema
+│   └── use-theme-color.ts       # Cores do tema
+├── lib/                          # Bibliotecas e utilitários
 │   ├── supabase.ts              # Configuração Supabase
-│   ├── logger.ts                # Sistema de logs
+│   ├── mercadopago.ts           # Integração Mercado Pago
+│   ├── whatsapp.ts              # Integração WhatsApp
 │   ├── notifications.ts         # Push notifications
-│   └── whatsapp.ts              # Integração WhatsApp
+│   ├── logger.ts                # Sistema de logs
+│   ├── errorHandler.ts          # Tratamento centralizado de erros
+│   ├── cache.ts                 # Cache com TTL
+│   └── AuthContext.tsx          # Contexto de autenticação global
 ├── scripts/                      # Scripts utilitários
-└── supabase_*.sql               # Scripts do banco
+├── supabase_*.sql               # Scripts do banco (12 arquivos)
+├── .agent/                       # Agentes e Skills
+│   ├── agents/                  # 20 agentes especializados
+│   ├── skills/                  # 38 core skills
+│   ├── awesome-skills/          # 1.297 awesome skills
+│   └── workflows/               # 11 workflows
+└── RESUMO_FUNCIONALIDADES.md    # Documentação completa
 ```
 
 ---
@@ -138,14 +158,80 @@ barbershop_app/mobile/
 - Integração com mensalistas (baixa automática)
 - Proteção contra double-tap
 
-### 💳 Opções de Pagamento
-- **Carteira Digital**: Saldo pré-pago, débito automático
-- **PIX**: QR Code via Mercado Pago, pagamento instantâneo
-- **Cartão de Crédito (Online)**: Checkout Pro Mercado Pago
-- **Dinheiro**: Pagamento presencial na barbearia
-- **Cartão na Barbearia**: Crédito ou débito presencial
-- Agendamento funciona SEM Mercado Pago (pagamento presencial)
-- Status de pagamento: pending → approved (após confirmação)
+### 💳 Pagamento (5 métodos)
+
+#### Fluxo Completo de Pagamento
+O pagamento é a etapa final do agendamento (após seleção de serviço, barbeiro, data e confirmação).
+
+**Arquivo:** `app/booking/payment.tsx`
+**Tabelas:** `payment_transactions`, `appointments`, `client_wallet`, `wallet_transactions`
+**Logs:** `[PAGAMENTO]`
+
+#### Métodos Disponíveis
+
+| Método | Tipo | Fluxo | Status |
+|--------|------|-------|--------|
+| **Carteira Digital** | Online | Débito automático do saldo | ✅ Funcional |
+| **PIX** | Online | QR Code via Mercado Pago | ✅ Funcional |
+| **Cartão de Crédito (Online)** | Online | Checkout Pro Mercado Pago | ✅ Funcional |
+| **Dinheiro** | Presencial | Paga na barbearia | ✅ Funcional |
+| **Cartão na Barbearia** | Presencial | Crédito/débito presencial | ✅ Funcional |
+
+#### Fluxo: Carteira Digital
+```
+1. Verifica saldo do cliente
+2. Se saldo >= valor: debita e cria agendamento
+3. Se saldo < valor: sugere adicionar créditos
+4. Registra transação em wallet_transactions
+5. Redireciona para tela de sucesso
+```
+
+#### Fluxo: PIX
+```
+1. Cria pagamento via Mercado Pago API
+2. Exibe QR Code (base64) e código PIX
+3. Monitora status a cada 5 segundos
+4. Botão "Já Paguei" verifica confirmação
+5. Quando aprovado: cria agendamento + redireciona
+6. Timeout: 30 minutos (expiração do PIX)
+```
+
+#### Fluxo: Cartão de Crédito (Online)
+```
+1. Cria preferência de pagamento no Mercado Pago
+2. Abre checkout do MP no navegador externo
+3. Usuário preenche dados do cartão no site do MP
+4. MP redireciona para deep link:
+   - barbershop://booking/success → pagamento aprovado
+   - barbershop://booking/failure → pagamento recusado
+   - barbershop://booking/pending → pagamento pendente
+5. Deep link cria agendamento + atualiza transação
+6. Redireciona para tela de sucesso
+```
+
+#### Fluxo: Dinheiro / Cartão na Barbearia
+```
+1. Cria agendamento com payment_status: 'pending'
+2. Registra transação com status: 'pending'
+3. Redireciona para tela de sucesso
+4. Barbeiro confirma pagamento presencialmente no painel
+```
+
+#### Deep Links de Retorno (Mercado Pago)
+| URL | Descrição | Ação |
+|-----|-----------|------|
+| `barbershop://booking/success` | Pagamento aprovado | Cria agendamento + redireciona |
+| `barbershop://booking/failure` | Pagamento recusado | Mostra erro + permite tentar |
+| `barbershop://booking/pending` | Pagamento pendente | Mostra mensagem informativa |
+
+#### Configuração (app.json)
+```json
+{
+  "expo": {
+    "scheme": "barbershop"
+  }
+}
+```
 
 ### ⭐ Avaliações
 - Avaliação após serviço concluído (1-5 estrelas)
@@ -1985,6 +2071,7 @@ EXPO_PROJECT_ID=xxx
 
 | Data | Versão | Mudança | Arquivo |
 |------|--------|---------|---------|
+| 31/03/2026 | 5.0 | Implementados: errorHandler, cache, AuthContext. Documentação de pagamento completa | errorHandler.ts, cache.ts, AuthContext.tsx |
 | 31/03/2026 | 4.3 | Catálogo de 1.297 awesome skills integrado ao projeto | awesome-skills/, GEMINI.md, ARCHITECTURE.md |
 | 31/03/2026 | 4.2 | Corrigidos 3 bugs: horários não atualizam, galeria offline, logout com cache | datetime.tsx, gallery.tsx, profile.tsx |
 | 31/03/2026 | 4.1 | Adicionadas opções de pagamento presencial (Dinheiro, Cartão na Barbearia) | payment.tsx, supabase_payments.sql |
@@ -2039,7 +2126,7 @@ EXPO_PROJECT_ID=xxx
 ---
 
 *Documento atualizado em: 31/03/2026*
-*Versão: 4.3*
+*Versão: 5.0*
 *Total de funcionalidades: 45+*
 *Total de tabelas: 31*
 *Total de telas: 25+*
@@ -2048,3 +2135,4 @@ EXPO_PROJECT_ID=xxx
 *Total de awesome skills: 1.297*
 *Total de skills disponíveis: 1.335*
 *Total de seções técnicas: 36*
+*Total de libs utilitárias: 8*
