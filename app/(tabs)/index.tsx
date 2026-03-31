@@ -33,7 +33,9 @@ const ServiceButton = React.memo(({ service, onPress }: { service: any; onPress:
     onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onPress(); }}
     activeOpacity={0.85}
     className="items-center mr-4 bg-[#1e1e1e] p-4 rounded-2xl border border-gray-800"
-    style={{ width: 110 }}
+    style={{ width: 110, minHeight: 44 }}
+    accessibilityRole="button"
+    accessibilityLabel={`Agendar ${service.name} por R$ ${service.price.toFixed(2)}`}
   >
     <View className="w-14 h-14 rounded-full bg-[#121212] border-2 border-[#d4af37] items-center justify-center mb-3">
       <Ionicons name={service.icon || 'cut'} size={26} color="#d4af37" />
@@ -57,7 +59,9 @@ const BarberCard = React.memo(({ item, rating, onPress }: { item: any; rating: a
     onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onPress(); }}
     activeOpacity={0.85}
     className="items-center mr-5 bg-[#1e1e1e] p-3 rounded-2xl border border-gray-800"
-    style={{ width: 120 }}
+    style={{ width: 120, minHeight: 44 }}
+    accessibilityRole="button"
+    accessibilityLabel={`Ver perfil de ${item.name}`}
   >
     <Image
       source={{ uri: item.avatar_url || 'https://i.pravatar.cc/150' }}
