@@ -2756,10 +2756,10 @@ export default function AdminScreen() {
             {hasPermission('can_view_dashboard') && (
               <TouchableOpacity 
                 onPress={() => {setIsEditing(false); setActiveTab('dashboard');}} 
-                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'dashboard' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-gray-800'}`}
+                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'dashboard' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-[#d4af37]'}`}
               >
                 <Ionicons name="stats-chart" size={20} color={activeTab === 'dashboard' ? '#000' : '#d4af37'} />
-                <Text className={`font-bold text-xs mt-1 ${activeTab === 'dashboard' ? 'text-black' : 'text-gray-400'}`}>Dashboard</Text>
+                <Text className={`font-bold text-xs mt-1 ${activeTab === 'dashboard' ? 'text-black' : 'text-[#d4af37]'}`}>Dashboard</Text>
               </TouchableOpacity>
             )}
 
@@ -2767,10 +2767,10 @@ export default function AdminScreen() {
             {hasPermission('can_view_agenda') && (
               <TouchableOpacity 
                 onPress={() => {setIsEditing(false); setActiveTab('agenda');}} 
-                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'agenda' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-gray-800'}`}
+                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'agenda' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-[#d4af37]'}`}
               >
                 <Ionicons name="calendar" size={20} color={activeTab === 'agenda' ? '#000' : '#d4af37'} />
-                <Text className={`font-bold text-xs mt-1 ${activeTab === 'agenda' ? 'text-black' : 'text-gray-400'}`}>Agenda</Text>
+                <Text className={`font-bold text-xs mt-1 ${activeTab === 'agenda' ? 'text-black' : 'text-[#d4af37]'}`}>Agenda</Text>
               </TouchableOpacity>
             )}
 
@@ -2778,10 +2778,10 @@ export default function AdminScreen() {
             {hasPermission('can_view_clients') && (
               <TouchableOpacity 
                 onPress={() => {setIsEditing(false); setActiveTab('clientes');}} 
-                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'clientes' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-gray-800'}`}
+                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'clientes' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-[#d4af37]'}`}
               >
                 <Ionicons name="people" size={20} color={activeTab === 'clientes' ? '#000' : '#d4af37'} />
-                <Text className={`font-bold text-xs mt-1 ${activeTab === 'clientes' ? 'text-black' : 'text-gray-400'}`}>Clientes</Text>
+                <Text className={`font-bold text-xs mt-1 ${activeTab === 'clientes' ? 'text-black' : 'text-[#d4af37]'}`}>Clientes</Text>
               </TouchableOpacity>
             )}
 
@@ -2789,10 +2789,10 @@ export default function AdminScreen() {
             {hasPermission('can_view_services') && (
               <TouchableOpacity 
                 onPress={() => {setIsEditing(false); setActiveTab('servicos');}} 
-                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'servicos' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-gray-800'}`}
+                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'servicos' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-[#d4af37]'}`}
               >
                 <Ionicons name="cut" size={20} color={activeTab === 'servicos' ? '#000' : '#d4af37'} />
-                <Text className={`font-bold text-xs mt-1 ${activeTab === 'servicos' ? 'text-black' : 'text-gray-400'}`}>Serviços</Text>
+                <Text className={`font-bold text-xs mt-1 ${activeTab === 'servicos' ? 'text-black' : 'text-[#d4af37]'}`}>Serviços</Text>
               </TouchableOpacity>
             )}
 
@@ -2800,10 +2800,10 @@ export default function AdminScreen() {
             {hasPermission('can_view_team') && (
               <TouchableOpacity 
                 onPress={() => {setIsEditing(false); setActiveTab('profissionais');}} 
-                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'profissionais' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-gray-800'}`}
+                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'profissionais' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-[#d4af37]'}`}
               >
                 <Ionicons name="person" size={20} color={activeTab === 'profissionais' ? '#000' : '#d4af37'} />
-                <Text className={`font-bold text-xs mt-1 ${activeTab === 'profissionais' ? 'text-black' : 'text-gray-400'}`}>Equipe</Text>
+                <Text className={`font-bold text-xs mt-1 ${activeTab === 'profissionais' ? 'text-black' : 'text-[#d4af37]'}`}>Equipe</Text>
               </TouchableOpacity>
             )}
 
@@ -2811,10 +2811,10 @@ export default function AdminScreen() {
             {hasPermission('can_view_finance') && (
               <TouchableOpacity 
                 onPress={() => {setIsEditing(false); setActiveTab('financeiro');}} 
-                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'financeiro' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-gray-800'}`}
+                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'financeiro' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-[#d4af37]'}`}
               >
                 <Ionicons name="wallet" size={20} color={activeTab === 'financeiro' ? '#000' : '#d4af37'} />
-                <Text className={`font-bold text-xs mt-1 ${activeTab === 'financeiro' ? 'text-black' : 'text-gray-400'}`}>Financeiro</Text>
+                <Text className={`font-bold text-xs mt-1 ${activeTab === 'financeiro' ? 'text-black' : 'text-[#d4af37]'}`}>Financeiro</Text>
               </TouchableOpacity>
             )}
 
@@ -2822,10 +2822,10 @@ export default function AdminScreen() {
             {hasPermission('can_view_subscriptions') && (
               <TouchableOpacity 
                 onPress={() => {setIsEditing(false); setActiveTab('mensalistas');}} 
-                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'mensalistas' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-gray-800'}`}
+                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'mensalistas' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-[#d4af37]'}`}
               >
                 <Ionicons name="card" size={20} color={activeTab === 'mensalistas' ? '#000' : '#d4af37'} />
-                <Text className={`font-bold text-xs mt-1 ${activeTab === 'mensalistas' ? 'text-black' : 'text-gray-400'}`}>Mensalistas</Text>
+                <Text className={`font-bold text-xs mt-1 ${activeTab === 'mensalistas' ? 'text-black' : 'text-[#d4af37]'}`}>Mensalistas</Text>
               </TouchableOpacity>
             )}
 
@@ -2833,25 +2833,14 @@ export default function AdminScreen() {
             {hasPermission('can_view_cash_register') && (
               <TouchableOpacity 
                 onPress={() => {setIsEditing(false); setActiveTab('caixa');}} 
-                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'caixa' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-gray-800'}`}
+                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'caixa' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-[#d4af37]'}`}
               >
                 <Ionicons name="cash" size={20} color={activeTab === 'caixa' ? '#000' : '#d4af37'} />
-                <Text className={`font-bold text-xs mt-1 ${activeTab === 'caixa' ? 'text-black' : 'text-gray-400'}`}>Caixa</Text>
+                <Text className={`font-bold text-xs mt-1 ${activeTab === 'caixa' ? 'text-black' : 'text-[#d4af37]'}`}>Caixa</Text>
               </TouchableOpacity>
             )}
 
-            {/* Mais - Admin apenas */}
-            {hasPermission('can_view_settings') && (
-              <TouchableOpacity 
-                onPress={() => {setIsEditing(false); setActiveTab('mais');}} 
-                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'mais' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-gray-800'}`}
-              >
-                <Ionicons name="ellipsis-horizontal" size={20} color={activeTab === 'mais' ? '#000' : '#d4af37'} />
-                <Text className={`font-bold text-xs mt-1 ${activeTab === 'mais' ? 'text-black' : 'text-gray-400'}`}>Mais</Text>
-              </TouchableOpacity>
-            )}
-
-            {/* Relatórios - Nova feature Fase 4 */}
+            {/* Relatórios - Fase 4 */}
             <TouchableOpacity 
               onPress={() => router.push('/admin/reports' as any)} 
               className="px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] bg-[#1e1e1e] border border-[#d4af37]"
@@ -2860,16 +2849,25 @@ export default function AdminScreen() {
               <Text className="text-[#d4af37] font-bold text-xs mt-1">Relatórios</Text>
             </TouchableOpacity>
 
-            {/* Cupons - Nova feature Fase 4 */}
+            {/* Cupons - Fase 4 */}
             <TouchableOpacity 
-              onPress={() => {
-                Alert.alert('Cupons', 'Gerencie cupons na seção Mais → Fidelidade ou crie novos cupons no Supabase.');
-              }} 
+              onPress={() => Alert.alert('Cupons', 'Cupons ativos: PRIMEIRAVISITA (10%), INDICA10 (R$10), VOLTEI (15%). Gerencie no Supabase.')} 
               className="px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] bg-[#1e1e1e] border border-[#d4af37]"
             >
               <Ionicons name="pricetag" size={20} color="#d4af37" />
               <Text className="text-[#d4af37] font-bold text-xs mt-1">Cupons</Text>
             </TouchableOpacity>
+
+            {/* Mais - Admin apenas */}
+            {hasPermission('can_view_settings') && (
+              <TouchableOpacity 
+                onPress={() => {setIsEditing(false); setActiveTab('mais');}} 
+                className={`px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] ${activeTab === 'mais' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-[#d4af37]'}`}
+              >
+                <Ionicons name="ellipsis-horizontal" size={20} color={activeTab === 'mais' ? '#000' : '#d4af37'} />
+                <Text className={`font-bold text-xs mt-1 ${activeTab === 'mais' ? 'text-black' : 'text-[#d4af37]'}`}>Mais</Text>
+              </TouchableOpacity>
+            )}
           </ScrollView>
         </View>
 
@@ -3722,9 +3720,9 @@ export default function AdminScreen() {
                           : { bg: 'bg-yellow-900/30', border: 'border-yellow-700', text: 'text-yellow-400', label: 'Pendente', icon: 'time' };
 
                         return (
-                          <View key={appt.id} className="bg-[#1e1e1e] rounded-2xl border border-gray-800 mb-4 overflow-hidden">
+                          <View key={appt.id} className="bg-[#1e1e1e] rounded-2xl border border-gray-800 mb-4">
                             <View className="flex-row">
-                              <View className={`${appt.status === 'completed' || appt.status === 'cancelled' ? 'bg-gray-700' : 'bg-[#d4af37]'} p-4 items-center justify-center`} style={{ width: 80 }}>
+                              <View className={`${appt.status === 'completed' || appt.status === 'cancelled' ? 'bg-gray-700' : 'bg-[#d4af37]'} p-4 items-center justify-center rounded-l-2xl`} style={{ width: 80 }}>
                                 <Text className={`${appt.status === 'completed' || appt.status === 'cancelled' ? 'text-white' : 'text-black'} font-bold text-2xl`}>{day}</Text>
                                 <Text className={`${appt.status === 'completed' || appt.status === 'cancelled' ? 'text-gray-400' : 'text-black'} text-xs font-semibold`}>{dayName}</Text>
                                 <Text className={`${appt.status === 'completed' || appt.status === 'cancelled' ? 'text-gray-500' : 'text-black/70'} text-xs`}>{monthName}</Text>
@@ -3754,20 +3752,20 @@ export default function AdminScreen() {
                             
                             {/* Botões de Ação - Só aparecem se ainda não concluído/cancelado */}
                             {appt.status !== 'completed' && appt.status !== 'cancelled' && (
-                              <View className="flex-row px-4 pb-4">
+                              <View className="flex-row px-4 pb-4 pt-2 border-t border-gray-800">
                                 <TouchableOpacity 
                                   onPress={() => updateAppointmentStatus(appt.id, 'completed')}
-                                  className="flex-1 flex-row items-center justify-center py-2 mr-2 rounded-lg bg-green-900/30 border border-green-700"
+                                  className="flex-1 flex-row items-center justify-center py-3 mr-2 rounded-xl bg-green-900/30 border border-green-700"
                                 >
-                                  <Ionicons name="checkmark-circle" size={16} color="#22c55e" style={{ marginRight: 4 }} />
-                                  <Text className="text-green-400 font-bold text-xs">Concluir</Text>
+                                  <Ionicons name="checkmark-circle" size={18} color="#22c55e" style={{ marginRight: 6 }} />
+                                  <Text className="text-green-400 font-bold text-sm">Concluir</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity 
                                   onPress={() => updateAppointmentStatus(appt.id, 'cancelled')}
-                                  className="flex-1 flex-row items-center justify-center py-2 ml-2 rounded-lg bg-red-900/30 border border-red-700"
+                                  className="flex-1 flex-row items-center justify-center py-3 ml-2 rounded-xl bg-red-900/30 border border-red-700"
                                 >
-                                  <Ionicons name="close-circle" size={16} color="#f87171" style={{ marginRight: 4 }} />
-                                  <Text className="text-red-400 font-bold text-xs">Cancelar</Text>
+                                  <Ionicons name="close-circle" size={18} color="#f87171" style={{ marginRight: 6 }} />
+                                  <Text className="text-red-400 font-bold text-sm">Cancelar</Text>
                                 </TouchableOpacity>
                               </View>
                             )}

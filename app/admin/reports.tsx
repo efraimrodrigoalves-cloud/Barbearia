@@ -278,11 +278,11 @@ export default function ReportsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#121212]" edges={['bottom']}>
-      <ScrollView className="flex-1 px-4 pt-4">
-        <View className="flex-row items-center mb-6">
-          <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2 mr-2">
-            <Ionicons name="arrow-back" size={28} color="#d4af37" />
+    <SafeAreaView className="flex-1 bg-[#121212]" edges={['top', 'bottom']}>
+      <ScrollView className="flex-1 px-4">
+        <View className="flex-row items-center mt-4 mb-6">
+          <TouchableOpacity onPress={() => router.back()} className="p-3 -ml-3 mr-3">
+            <Ionicons name="arrow-back" size={32} color="#d4af37" />
           </TouchableOpacity>
           <Text className="text-white text-xl font-bold">Relatórios</Text>
         </View>
