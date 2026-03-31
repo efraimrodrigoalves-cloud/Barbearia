@@ -206,42 +206,52 @@ export default function SelectDateTime() {
         {loading ? (
            <ActivityIndicator size="large" color="#d4af37" />
         ) : (
-        <View className="flex-row flex-wrap justify-between">
-          {standardTimes.map((time, idx) => {
-             const isBooked = bookedTimes.includes(time);
-             const isBlocked = isTimeBlocked(time, blockedTimes);
-             const isUnavailable = isBooked || isBlocked;
-             const isSelected = selectedTime === time;
+         <View className="flex-row flex-wrap justify-between">
+           {standardTimes.map((time, idx) => {
+              const isBooked = bookedTimes.includes(time);
+              const isBlocked = isTimeBlocked(time, blockedTimes);
+              
+              // Verificar se horário já passou (apenas para hoje)
+              const now = new Date();
+              const isToday = selectedDate.toDateString() === now.toDateString();
+              const [h, m] = time.split(':').map(Number);
+              const isPast = isToday && (h < now.getHours() || (h === now.getHours() && m <= now.getMinutes()));
+              
+              const isUnavailable = isBooked || isBlocked || isPast;
+              const isSelected = selectedTime === time;
 
-             // Encontrar motivo do bloqueio (se houver)
-             const blockReason = blockedTimes.find(b => 
-               time >= b.start_time && time < b.end_time
-             )?.reason;
+              // Encontrar motivo do bloqueio (se houver)
+              const blockReason = isBlocked ? blockedTimes.find(b => 
+                time >= b.start_time && time < b.end_time
+              )?.reason : null;
+              const timeLabel = isPast ? 'Passado' : blockReason;
 
-             return (
-               <TouchableOpacity
-                 key={idx}
-                 onPress={() => !isUnavailable && setSelectedTime(time)}
-                 disabled={isUnavailable}
-                 className={`p-3 mb-4 rounded-xl border w-[30%] items-center 
-                    ${isSelected ? 'border-[#d4af37] bg-[#1e1e1e]' 
-                    : isBlocked ? 'border-red-900 bg-red-900/30' 
-                    : isBooked ? 'border-gray-900 bg-gray-900 opacity-50' 
-                    : 'border-gray-800 bg-[#1e1e1e]'}`}
-               >
-                 <Text className={
-                    isSelected ? 'text-[#d4af37] font-bold' 
-                    : isBlocked ? 'text-red-400 line-through'
-                    : isBooked ? 'text-gray-600 line-through'
-                    : 'text-gray-300'
-                 }>{time}</Text>
-                 {isBlocked && blockReason && (
-                   <Text className="text-red-400/70 text-[10px] mt-1">{blockReason}</Text>
-                 )}
-               </TouchableOpacity>
-             )
-          })}
-        </View>
+              return (
+                <TouchableOpacity
+                  key={idx}
+                  onPress={() => !isUnavailable && setSelectedTime(time)}
+                  disabled={isUnavailable}
+                  className={`p-3 mb-4 rounded-xl border w-[30%] items-center 
+                     ${isSelected ? 'border-[#d4af37] bg-[#1e1e1e]' 
+                     : isBlocked ? 'border-red-900 bg-red-900/30' 
+                     : isPast ? 'border-gray-900 bg-gray-900 opacity-30'
+                     : isBooked ? 'border-gray-900 bg-gray-900 opacity-50' 
+                     : 'border-gray-800 bg-[#1e1e1e]'}`}
+                >
+                  <Text className={
+                     isSelected ? 'text-[#d4af37] font-bold' 
+                     : isBlocked ? 'text-red-400 line-through'
+                     : isPast ? 'text-gray-700 line-through'
+                     : isBooked ? 'text-gray-600 line-through'
+                     : 'text-gray-300'
+                  }>{time}</Text>
+                  {timeLabel && (
+                    <Text className="text-red-400/70 text-[10px] mt-1">{timeLabel}</Text>
+                  )}
+                </TouchableOpacity>
+              )
+           })}
+         </View>
         )}
 
         {/* Resumo de horários */}
