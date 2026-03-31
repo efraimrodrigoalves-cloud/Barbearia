@@ -4,13 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { logger } from '../../lib/logger';
-import * as LinkingExpo from 'expo-linking';
+import { useRouter } from 'expo-router';
 
 const LOG_PREFIX = '[ADMIN]';
 
 export default function AdminScreen() {
   console.log('[ADMIN] ========== COMPONENTE ADMIN INICIADO ==========');
   
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'agenda' | 'servicos' | 'profissionais' | 'clientes' | 'relatorios' | 'financeiro' | 'mensalistas' | 'caixa' | 'mais'>('dashboard');
   
   // =============================================
@@ -2852,7 +2853,7 @@ export default function AdminScreen() {
 
             {/* Relatórios - Nova feature Fase 4 */}
             <TouchableOpacity 
-              onPress={() => LinkingExpo.default.openURL('barbershop://admin/reports')} 
+              onPress={() => router.push('/admin/reports' as any)} 
               className="px-4 py-3 rounded-xl mr-3 items-center min-w-[80px] bg-[#1e1e1e] border border-[#d4af37]"
             >
               <Ionicons name="analytics" size={20} color="#d4af37" />
