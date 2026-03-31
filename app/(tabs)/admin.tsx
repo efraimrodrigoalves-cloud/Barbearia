@@ -116,11 +116,15 @@ export default function AdminScreen() {
     can_view_services: false,
     can_edit_services: false,
     can_view_team: false,
-    can_edit_team: false,
     can_view_finance: false,
     can_view_commissions: false,
     can_view_cash_register: false,
     can_view_subscriptions: false,
+    can_view_reports: false,
+    can_view_inventory: false,
+    can_view_loyalty: false,
+    can_view_referrals: false,
+    can_view_chat: false,
     can_view_settings: false,
     can_manage_barbers: false,
   });
@@ -2358,6 +2362,10 @@ export default function AdminScreen() {
               can_view_cash_register: true,
               can_view_subscriptions: true,
               can_view_reports: true,
+              can_view_inventory: true,
+              can_view_loyalty: true,
+              can_view_referrals: true,
+              can_view_chat: true,
               can_view_settings: true,
               can_manage_barbers: true,
             });
@@ -2378,6 +2386,10 @@ export default function AdminScreen() {
               can_view_cash_register: false,
               can_view_subscriptions: false,
               can_view_reports: false,
+              can_view_inventory: false,
+              can_view_loyalty: false,
+              can_view_referrals: false,
+              can_view_chat: false,
               can_view_settings: false,
               can_manage_barbers: false,
             });
@@ -2403,6 +2415,10 @@ export default function AdminScreen() {
             can_view_cash_register: true,
             can_view_subscriptions: true,
             can_view_reports: true,
+            can_view_inventory: true,
+            can_view_loyalty: true,
+            can_view_referrals: true,
+            can_view_chat: true,
             can_view_settings: true,
             can_manage_barbers: true,
           });
@@ -2425,6 +2441,10 @@ export default function AdminScreen() {
           can_view_cash_register: true,
           can_view_subscriptions: true,
           can_view_reports: true,
+          can_view_inventory: true,
+          can_view_loyalty: true,
+          can_view_referrals: true,
+          can_view_chat: true,
           can_view_settings: true,
           can_manage_barbers: true,
         });
@@ -5887,27 +5907,31 @@ export default function AdminScreen() {
                    </>
                  )}
 
-                 {/* LINK ONLINE */}
-                 {maisSubTab === 'link' && (
-                   <>
-                     <Text className="text-white text-lg font-bold mb-4">Agendamento Online</Text>
-                     
-                     <View className="bg-[#1e1e1e] p-5 rounded-2xl border border-gray-800 mb-4">
-                       <View className="flex-row items-center justify-between mb-4">
-                         <View className="flex-row items-center">
-                           <Ionicons name="globe" size={24} color="#d4af37" style={{ marginRight: 12 }} />
-                           <View>
-                             <Text className="text-white font-bold">Link Público</Text>
-                             <Text className="text-gray-400 text-sm">Compartilhe para seus clientes agendarem</Text>
-                           </View>
-                         </View>
-                         <TouchableOpacity 
-                           onPress={() => setOnlineEnabled(!onlineEnabled)}
-                           className={`w-14 h-8 rounded-full ${onlineEnabled ? 'bg-green-600' : 'bg-gray-600'} justify-center`}
-                         >
-                           <View className={`w-6 h-6 rounded-full bg-white mx-1 ${onlineEnabled ? 'ml-7' : 'ml-1'}`} />
-                         </TouchableOpacity>
-                       </View>
+                  {/* LINK ONLINE */}
+                  {maisSubTab === 'link' && (
+                    <>
+                      <Text className="text-white text-lg font-bold mb-4">Agendamento Online</Text>
+                      
+                      <View className="bg-[#1e1e1e] p-5 rounded-2xl border border-gray-800 mb-4">
+                        <View className="flex-row items-center justify-between mb-4">
+                          <View className="flex-1 mr-4">
+                            <View className="flex-row items-center">
+                              <Ionicons name="globe" size={20} color="#d4af37" style={{ marginRight: 8 }} />
+                              <Text className="text-white font-bold">Link Público</Text>
+                            </View>
+                            <Text className="text-gray-400 text-xs mt-1">Compartilhe para seus clientes agendarem</Text>
+                          </View>
+                          <TouchableOpacity 
+                            onPress={() => setOnlineEnabled(!onlineEnabled)}
+                            className="w-12 h-7 rounded-full justify-center px-1"
+                            style={{ backgroundColor: onlineEnabled ? '#16a34a' : '#4b5563' }}
+                          >
+                            <View 
+                              className="w-5 h-5 rounded-full bg-white"
+                              style={{ marginLeft: onlineEnabled ? 20 : 0 }}
+                            />
+                          </TouchableOpacity>
+                        </View>
 
                        {onlineEnabled && (
                          <>
@@ -5993,22 +6017,27 @@ export default function AdminScreen() {
                          </View>
                        </View>
 
-                       {/* Lista de permissões para barbeiro */}
-                       {[
-                         { key: 'can_view_dashboard', label: 'Ver Dashboard', icon: 'stats-chart' },
-                         { key: 'can_view_agenda', label: 'Ver Agenda', icon: 'calendar' },
-                         { key: 'can_edit_appointments', label: 'Editar Agendamentos', icon: 'create' },
-                         { key: 'can_view_clients', label: 'Ver Clientes', icon: 'people' },
-                         { key: 'can_edit_clients', label: 'Editar Clientes', icon: 'person-add' },
-                         { key: 'can_view_services', label: 'Ver Serviços', icon: 'cut' },
-                         { key: 'can_edit_services', label: 'Editar Serviços', icon: 'create' },
-                         { key: 'can_view_team', label: 'Ver Equipe', icon: 'person' },
-                         { key: 'can_view_finance', label: 'Ver Financeiro', icon: 'wallet' },
-                         { key: 'can_view_commissions', label: 'Ver Comissões', icon: 'cash' },
-                         { key: 'can_view_cash_register', label: 'Ver Caixa', icon: 'calculator' },
-                         { key: 'can_view_subscriptions', label: 'Ver Mensalistas', icon: 'card' },
-                         { key: 'can_view_settings', label: 'Ver Configurações', icon: 'settings' },
-                       ].map((perm) => (
+                        {/* Lista de permissões para barbeiro */}
+                        {[
+                          { key: 'can_view_dashboard', label: 'Ver Dashboard', icon: 'stats-chart' },
+                          { key: 'can_view_agenda', label: 'Ver Agenda', icon: 'calendar' },
+                          { key: 'can_edit_appointments', label: 'Editar Agendamentos', icon: 'create' },
+                          { key: 'can_view_clients', label: 'Ver Clientes', icon: 'people' },
+                          { key: 'can_edit_clients', label: 'Editar Clientes', icon: 'person-add' },
+                          { key: 'can_view_services', label: 'Ver Serviços', icon: 'cut' },
+                          { key: 'can_edit_services', label: 'Editar Serviços', icon: 'create' },
+                          { key: 'can_view_team', label: 'Ver Equipe', icon: 'person' },
+                          { key: 'can_view_finance', label: 'Ver Financeiro', icon: 'wallet' },
+                          { key: 'can_view_commissions', label: 'Ver Comissões', icon: 'cash' },
+                          { key: 'can_view_cash_register', label: 'Ver Caixa', icon: 'calculator' },
+                          { key: 'can_view_subscriptions', label: 'Ver Mensalistas', icon: 'card' },
+                          { key: 'can_view_reports', label: 'Ver Relatórios', icon: 'analytics' },
+                          { key: 'can_view_inventory', label: 'Ver Estoque', icon: 'cube' },
+                          { key: 'can_view_loyalty', label: 'Ver Fidelidade', icon: 'star' },
+                          { key: 'can_view_referrals', label: 'Ver Indicações', icon: 'people' },
+                          { key: 'can_view_chat', label: 'Ver Chat', icon: 'chatbubbles' },
+                          { key: 'can_view_settings', label: 'Ver Configurações', icon: 'settings' },
+                        ].map((perm) => (
                          <View key={perm.key} className="flex-row items-center justify-between py-3 border-b border-gray-800">
                            <View className="flex-row items-center">
                              <Ionicons name={perm.icon as any} size={20} color="#d4af37" style={{ marginRight: 12 }} />
