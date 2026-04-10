@@ -10,11 +10,7 @@ import * as Haptics from 'expo-haptics';
 
 /**
  * Tela de Confirmação de Agendamento
- * 
- * Descrição: Exibe resumo e confirma o agendamento
- * Parâmetros: serviceId, barberId, date, time
- * Tabelas utilizadas: services, barbers, appointments, profiles
- * Logs: [BOOKING]
+ * Exibe resumo e confirma o agendamento
  */
 const LOG_PREFIX = '[BOOKING]';
 
@@ -30,31 +26,24 @@ export default function ConfirmBooking() {
   const [clientPhone, setClientPhone] = useState('');
 
   useEffect(() => {
-    console.log(`${LOG_PREFIX} Carregando dados para confirmação:`, params);
     async function loadObj() {
-        if(params.serviceId) {
-           const {data: sv} = await supabase.from('services').select('*').eq('id', params.serviceId).single();
-           setService(sv);
-           console.log(`${LOG_PREFIX} Serviço carregado: ${sv?.name}`);
-        }
-        if(params.barberId) {
-           const {data: bb} = await supabase.from('barbers').select('*').eq('id', params.barberId).single();
-           setBarber(bb);
-           console.log(`${LOG_PREFIX} Barbeiro carregado: ${bb?.name}`);
-        }
+      // Buscar dados em paralelo
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const [serviceRes, barberRes, profileRes] = await Promise.all([
+        params.serviceId ? supabase.from('services').select('*').eq('id', params.serviceId).single() : Promise.resolve({ data: null }),
+        params.barberId ? supabase.from('barbers').select('*').eq('id', params.barberId).single() : Promise.resolve({ data: null }),
+        user ? supabase.from('profiles').select('full_name, phone').eq('id', user.id).single() : Promise.resolve({ data: null }),
+      ]);
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if(user) {
-            console.log(`${LOG_PREFIX} Carregando perfil do usuário: ${user.id}`);
-            const { data: profile } = await supabase.from('profiles').select('full_name, phone').eq('id', user.id).single();
-            if(profile) {
-               setClientName(profile.full_name || '');
-               setClientPhone(profile.phone || '');
-               console.log(`${LOG_PREFIX} Perfil carregado: ${profile.full_name}`);
-            }
-        }
-     }
-     loadObj();
+      if (serviceRes.data) setService(serviceRes.data);
+      if (barberRes.data) setBarber(barberRes.data);
+      if (profileRes.data) {
+        setClientName(profileRes.data.full_name || '');
+        setClientPhone(profileRes.data.phone || '');
+      }
+    }
+    loadObj();
   }, [params]);
 
   const handleConfirm = async () => {

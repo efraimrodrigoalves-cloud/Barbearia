@@ -51,12 +51,7 @@ export function useOffline(): UseOfflineReturn {
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       const connected = state.isConnected && state.isInternetReachable !== false;
-      console.log(`${LOG_PREFIX} Status da rede:`, { 
-        isConnected: state.isConnected, 
-        isReachable: state.isInternetReachable,
-        type: state.type 
-      });
-      setIsOnline(connected);
+      setIsOnline(connected ?? false);
       
       if (connected) {
         console.log(`${LOG_PREFIX} Conexão restaurada, sincronizando...`);
@@ -88,11 +83,11 @@ export function useOffline(): UseOfflineReturn {
       cacheGet<any>('userProfile') || Promise.resolve(null),
     ]);
 
-    setOfflineData({ services, barbers, appointments, profile });
-    console.log(`${LOG_PREFIX} Cache carregado:`, { 
-      services: services?.length, 
-      barbers: barbers?.length, 
-      appointments: appointments?.length 
+    setOfflineData({ 
+      services: services || [], 
+      barbers: barbers || [], 
+      appointments: appointments || [], 
+      profile: profile || null 
     });
   }, []);
 

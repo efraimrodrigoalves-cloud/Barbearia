@@ -3424,17 +3424,16 @@ export default function AdminScreen() {
                                     />
                                   ))}
                                 </ScrollView>
-                               ) : (
-                                 <Text className="text-gray-500 text-sm">Nenhuma foto cadastrada</Text>
+                                ) : (
+                                  <Text className="text-gray-500 text-sm">Nenhuma foto cadastrada</Text>
                                 )}
-                      </View>
-                    </>
-                  )}
-             )}
-                       </View>
-                     )}
-                   </View>
-                 ))}
+                              </View>
+                            </>
+                          )}
+                        </View>
+                      )}
+                    </View>
+                  ))}
                </>
             )}
 

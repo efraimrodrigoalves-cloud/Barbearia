@@ -10,10 +10,7 @@ import React from 'react';
 
 /**
  * Tela Inicial do Cliente
- * 
- * Descrição: Exibe saudação, banner de agendamento, lista de serviços e profissionais
- * Tabelas utilizadas: profiles, services, barbers, reviews
- * Logs: [HOME]
+ * Exibe saudação, banner de agendamento, lista de serviços e profissionais
  */
 const LOG_PREFIX = '[HOME]';
 
@@ -96,62 +93,57 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      let isMounted = true;
+      
       async function loadAll() {
-        console.log(`${LOG_PREFIX} Carregando dados da tela inicial`);
+        if (!isMounted) return;
+        
         try {
           setError(null);
           
-          // Buscar perfil do usuário logado
           const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            console.log(`${LOG_PREFIX} Usuário logado: ${user.id}`);
+          if (user && isMounted) {
             const { data: prof } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
-            setProfile(prof);
-            console.log(`${LOG_PREFIX} Perfil carregado: ${prof?.full_name}`);
+            if (isMounted) setProfile(prof);
           }
           
           // Buscar serviços, barbeiros e avaliações em paralelo
-          console.log(`${LOG_PREFIX} Buscando serviços, barbeiros e avaliações`);
           const [svcsRes, bbsRes, reviewsRes] = await Promise.all([
             supabase.from('services').select('*').order('price', { ascending: true }),
             supabase.from('barbers').select('*').limit(10),
             supabase.from('reviews').select('barber_id, rating'),
           ]);
-          if (svcsRes.data) {
-            setServices(svcsRes.data);
-            console.log(`${LOG_PREFIX} ${svcsRes.data.length} serviços carregados`);
-          }
-          if (bbsRes.data) {
-            setBarbers(bbsRes.data);
-            console.log(`${LOG_PREFIX} ${bbsRes.data.length} barbeiros carregados`);
-          }
           
-          // Calcular avaliações por barbeiro
-          if (reviewsRes.data) {
-            console.log(`${LOG_PREFIX} Calculando avaliações de ${reviewsRes.data.length} reviews`);
-            const ratings: Record<string, { total: number; count: number }> = {};
-            reviewsRes.data.forEach(r => {
-              if (!ratings[r.barber_id]) {
-                ratings[r.barber_id] = { total: 0, count: 0 };
-              }
-              ratings[r.barber_id].total += r.rating;
-              ratings[r.barber_id].count++;
-            });
+          if (isMounted) {
+            if (svcsRes.data) setServices(svcsRes.data);
+            if (bbsRes.data) setBarbers(bbsRes.data);
+            
+            // Calcular avaliações por barbeiro
+            if (reviewsRes.data) {
+              const ratings: Record<string, { total: number; count: number }> = {};
+              reviewsRes.data.forEach(r => {
+                if (!ratings[r.barber_id]) ratings[r.barber_id] = { total: 0, count: 0 };
+                ratings[r.barber_id].total += r.rating;
+                ratings[r.barber_id].count++;
+              });
 
-            const avgs: Record<string, { avg: number; count: number }> = {};
-            Object.entries(ratings).forEach(([id, val]) => {
-              avgs[id] = { avg: val.total / val.count, count: val.count };
-            });
-            setBarberRatings(avgs);
+              const avgs: Record<string, { avg: number; count: number }> = {};
+              Object.entries(ratings).forEach(([id, val]) => {
+                avgs[id] = { avg: val.total / val.count, count: val.count };
+              });
+              setBarberRatings(avgs);
+            }
           }
         } catch (error: any) {
-          console.log(`[ERRO] ${LOG_PREFIX} Falha ao carregar dados:`, error.message);
-          setError('Erro ao carregar dados. Verifique sua conexão.');
+          if (isMounted) setError('Erro ao carregar dados. Verifique sua conexão.');
         } finally {
-          setLoading(false);
+          if (isMounted) setLoading(false);
         }
       }
+      
       loadAll();
+      
+      return () => { isMounted = false; };
     }, [])
   );
 

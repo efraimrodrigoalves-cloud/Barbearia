@@ -9,10 +9,7 @@ import { logger } from '../../lib/logger';
 
 /**
  * Tela de Agenda do Cliente
- * 
- * Descrição: Mostra agendamentos futuros e passados com opção de avaliar
- * Tabelas utilizadas: appointments, services, barbers, reviews
- * Logs: [AGENDA]
+ * Mostra agendamentos futuros e passados com opção de avaliar
  */
 const LOG_PREFIX = '[AGENDA]';
 
@@ -26,7 +23,6 @@ export default function AppointmentsScreen() {
 
   const fetchAppointments = async () => {
     setLoading(true);
-    console.log(`${LOG_PREFIX} Buscando agendamentos do cliente`);
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -34,63 +30,47 @@ export default function AppointmentsScreen() {
       if (user) {
         const now = new Date();
         
-        // Buscar agendamentos futuros (próximos)
-        const { data: futureData } = await supabase
-          .from('appointments')
-          .select(`
-            id, appointment_date, status, user_id, barber_id,
-            services (name, price),
-            barbers (id, name)
-          `)
-          .eq('user_id', user.id)
-          .gte('appointment_date', now.toISOString())
-          .order('appointment_date', { ascending: true });
+        // Buscar dados em paralelo
+        const [futureRes, allRes, reviewsRes] = await Promise.all([
+          supabase
+            .from('appointments')
+            .select('id, appointment_date, status, user_id, barber_id, services (name, price), barbers (id, name)')
+            .eq('user_id', user.id)
+            .gte('appointment_date', now.toISOString())
+            .order('appointment_date', { ascending: true }),
+            
+          supabase
+            .from('appointments')
+            .select('id, appointment_date, status, user_id, barber_id, services (name, price), barbers (id, name)')
+            .eq('user_id', user.id)
+            .order('appointment_date', { ascending: false })
+            .limit(50),
+            
+          supabase
+            .from('reviews')
+            .select('appointment_id')
+            .eq('user_id', user.id),
+        ]);
 
-        if (futureData) {
-          console.log(`[AGENDA CLIENTE] ${futureData.length} agendamentos futuros`);
-          setAppointments(futureData);
-        }
-
-        // Buscar TODOS os agendamentos do cliente (para histórico)
-        // Incluindo concluídos que podem ter data futura
-        const { data: allData } = await supabase
-          .from('appointments')
-          .select(`
-            id, appointment_date, status, user_id, barber_id,
-            services (name, price),
-            barbers (id, name)
-          `)
-          .eq('user_id', user.id)
-          .order('appointment_date', { ascending: false })
-          .limit(50);
-
-        if (allData) {
-          // Filtrar para histórico: passados OU concluídos/cancelados
-          const pastOrCompleted = allData.filter(a => {
+        if (futureRes.data) setAppointments(futureRes.data);
+        
+        if (allRes.data) {
+          const pastOrCompleted = allRes.data.filter(a => {
             const apptDate = new Date(a.appointment_date);
             const isPast = apptDate < now;
             const isCompleted = a.status === 'completed';
             const isCancelled = a.status === 'cancelled';
             return isPast || isCompleted || isCancelled;
           });
-          
-          console.log(`[AGENDA CLIENTE] ${pastOrCompleted.length} agendamentos no histórico`);
           setPastAppointments(pastOrCompleted);
         }
 
-        // Buscar avaliações já feitas pelo usuário
-        const { data: reviews } = await supabase
-          .from('reviews')
-          .select('appointment_id')
-          .eq('user_id', user.id);
-
-        if (reviews) {
-          setReviewedAppointments(reviews.map(r => r.appointment_id));
-          console.log(`[AGENDA CLIENTE] ${reviews.length} avaliações já feitas`);
+        if (reviewsRes.data) {
+          setReviewedAppointments(reviewsRes.data.map(r => r.appointment_id));
         }
       }
     } catch (e) {
-      console.error('[AGENDA CLIENTE] Erro:', e);
+      logger.error('Erro ao buscar agendamentos', e);
     }
     setLoading(false);
   };

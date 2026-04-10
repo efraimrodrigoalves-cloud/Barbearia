@@ -41,126 +41,59 @@ export default function ProfileScreen() {
 
   /**
    * Carrega todos os dados do perfil do cliente
-   * Inclui: perfil, carteira, pontos, preferências, fotos, agendamento recorrente
+   * Otimizado: busca dados em paralelo para eliminar waterfalls
    */
   const loadProfileData = async () => {
     setLoading(true);
-    console.log('[PERFIL] Carregando dados do perfil...');
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        console.log('[PERFIL] Usuário não autenticado');
         setLoading(false);
         return;
       }
 
-      console.log('[PERFIL] User ID:', user.id);
+      // Buscar TODOS os dados em PARALELO para eliminar waterfalls
+      const [profileRes, walletRes, pointsRes, prefsRes, photosRes, recurringRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('client_wallet').select('*').eq('user_id', user.id).single(),
+        supabase.from('loyalty_points').select('*').eq('user_id', user.id).single(),
+        supabase.from('client_preferences').select('*, barbers(name), services(name)').eq('user_id', user.id).single(),
+        supabase.from('client_photos').select('*, barbers(name)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+        supabase.from('recurring_appointments').select('*, barbers(name), services(name)').eq('user_id', user.id).eq('is_active', true).single(),
+      ]);
 
-      // Buscar perfil
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      if (profileRes.data) setProfile(profileRes.data);
+      if (walletRes.data) setWallet(walletRes.data);
+      if (prefsRes.data) setPreferences(prefsRes.data);
+      if (photosRes.data) setPhotos(photosRes.data);
+      if (recurringRes.data) setRecurringAppointment(recurringRes.data);
 
-      if (profileData) {
-        setProfile(profileData);
-        console.log('[PERFIL] Perfil carregado:', profileData.full_name);
-      }
-
-      // Buscar carteira
-      const { data: walletData } = await supabase
-        .from('client_wallet')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (walletData) {
-        setWallet(walletData);
-        console.log('[PERFIL] Carteira: R$', walletData.balance);
-      }
-
-      // Buscar pontos de fidelidade
-      const { data: pointsData } = await supabase
-        .from('loyalty_points')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (pointsData) {
-        setLoyaltyPoints(pointsData.points);
-        console.log('[PERFIL] Pontos:', pointsData.points);
+      if (pointsRes.data) {
+        setLoyaltyPoints(pointsRes.data.points);
         
-        // Buscar nível atual
+        // Níveis de fidelidade (dado raramente muda, pode cachear)
         const { data: levels } = await supabase
           .from('loyalty_levels')
           .select('*')
           .order('min_points', { ascending: false });
 
         if (levels) {
-          const currentLevel = levels.find(l => pointsData.points >= l.min_points);
-          const nextLvl = levels.reverse().find(l => pointsData.points < l.min_points);
+          const currentLevel = levels.find(l => pointsRes.data.points >= l.min_points);
+          const nextLvl = levels.reverse().find(l => pointsRes.data.points < l.min_points);
           setLoyaltyLevel(currentLevel);
           setNextLevel(nextLvl);
-          console.log('[PERFIL] Nível:', currentLevel?.name);
         }
       }
 
-      // Buscar preferências
-      const { data: prefsData } = await supabase
-        .from('client_preferences')
-        .select('*, barbers(name), services(name)')
-        .eq('user_id', user.id)
-        .single();
-
-      if (prefsData) {
-        setPreferences(prefsData);
-        console.log('[PERFIL] Preferências carregadas');
-      }
-
-      // Buscar fotos
-      const { data: photosData } = await supabase
-        .from('client_photos')
-        .select('*, barbers(name)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (photosData) {
-        setPhotos(photosData);
-        console.log('[PERFIL] Fotos:', photosData.length);
-      }
-
-      // Buscar agendamento recorrente
-      const { data: recurringData } = await supabase
-        .from('recurring_appointments')
-        .select('*, barbers(name), services(name)')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
-
-      if (recurringData) {
-        setRecurringAppointment(recurringData);
-        console.log('[PERFIL] Agendamento recorrente ativo');
-      }
-
     } catch (e) {
-      console.error('[PERFIL] Erro ao carregar dados:', e);
+      logger.error('Erro ao carregar dados do perfil', e);
     }
     
     setLoading(false);
-    console.log('[PERFIL] Carregamento finalizado');
   };
 
-  /**
-   * Realiza logout do usuário
-   * 
-   * Limpa sessão do Supabase e redireciona para tela de login.
-   * 
-   * Logs: [PERFIL]
-   */
   const handleLogout = async () => {
     Alert.alert(
       'Sair da Conta',
@@ -171,21 +104,11 @@ export default function ProfileScreen() {
           text: 'Sair',
           style: 'destructive',
           onPress: async () => {
-            console.log('[PERFIL] Iniciando logout');
             try {
-              // Limpar sessão do Supabase
               await supabase.auth.signOut();
-              console.log('[PERFIL] Sessão do Supabase encerrada');
-              
-              // Limpar AsyncStorage (cache local)
               await AsyncStorage.clear();
-              console.log('[PERFIL] Cache local limpo');
-              
-              // Redirecionar para login
               router.replace('/(auth)/login');
-              console.log('[PERFIL] Logout completo, redirecionado para login');
             } catch (error: any) {
-              console.log('[ERRO] Falha ao fazer logout:', error.message);
               Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
             }
           }

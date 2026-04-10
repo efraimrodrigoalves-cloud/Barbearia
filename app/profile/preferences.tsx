@@ -8,10 +8,7 @@ import { logger } from '../../lib/logger';
 
 /**
  * Tela de Preferências do Cliente
- * 
- * Descrição: Permite configurar preferências de atendimento
- * Tabelas utilizadas: client_preferences, barbers, services
- * Logs: [PREFERÊNCIAS]
+ * Permite configurar preferências de atendimento
  */
 const LOG_PREFIX = '[PREFERÊNCIAS]';
 
@@ -45,52 +42,37 @@ export default function PreferencesScreen() {
   }, []);
 
   /**
-   * Carrega barbeiros, serviços e preferências salvas
+   * Carrega barbeiros, serviços e preferências salvas (otimizado com Promise.all)
    */
   const loadData = async () => {
     setLoading(true);
-    console.log('[PREFERÊNCIAS] Carregando dados...');
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) return;
 
-      // Buscar barbeiros
-      const { data: barbersData } = await supabase
-        .from('barbers')
-        .select('*')
-        .order('name', { ascending: true });
+      // Buscar tudo em paralelo
+      const [barbersRes, servicesRes, prefsRes] = await Promise.all([
+        supabase.from('barbers').select('*').order('name', { ascending: true }),
+        supabase.from('services').select('*').order('name', { ascending: true }),
+        supabase.from('client_preferences').select('*').eq('user_id', user.id).single(),
+      ]);
+
+      if (barbersRes.data) setBarbers(barbersRes.data);
+      if (servicesRes.data) setServices(servicesRes.data);
       
-      if (barbersData) setBarbers(barbersData);
-
-      // Buscar serviços
-      const { data: servicesData } = await supabase
-        .from('services')
-        .select('*')
-        .order('name', { ascending: true });
-      
-      if (servicesData) setServices(servicesData);
-
-      // Buscar preferências salvas
-      const { data: prefsData } = await supabase
-        .from('client_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (prefsData) {
-        console.log('[PREFERÊNCIAS] Preferências encontradas');
-        setPreferredBarber(barbersData?.find(b => b.id === prefsData.preferred_barber_id));
-        setPreferredService(servicesData?.find(s => s.id === prefsData.preferred_service_id));
-        setPreferredTime(prefsData.preferred_time || '');
-        setPreferredDay(prefsData.preferred_day);
-        setHairType(prefsData.hair_type || '');
-        setBeardStyle(prefsData.beard_style || '');
-        setNotes(prefsData.notes || '');
+      if (prefsRes.data) {
+        setPreferredBarber({ id: prefsRes.data.preferred_barber_id });
+        setPreferredService({ id: prefsRes.data.preferred_service_id });
+        setPreferredTime(prefsRes.data.preferred_time || '');
+        setPreferredDay(prefsRes.data.preferred_day);
+        setHairType(prefsRes.data.hair_type || '');
+        setBeardStyle(prefsRes.data.beard_style || '');
+        setNotes(prefsRes.data.notes || '');
       }
     } catch (e) {
-      console.error('[PREFERÊNCIAS] Erro:', e);
+      logger.error('Erro ao carregar preferências', e);
     }
     
     setLoading(false);
@@ -101,7 +83,6 @@ export default function PreferencesScreen() {
    */
   const savePreferences = async () => {
     setSaving(true);
-    console.log('[PREFERÊNCIAS] Salvando preferências...');
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -125,15 +106,14 @@ export default function PreferencesScreen() {
         .upsert(prefsData, { onConflict: 'user_id' });
 
       if (error) {
-        console.error('[PREFERÊNCIAS] Erro ao salvar:', error);
+        logger.error('Erro ao salvar preferências', error);
         Alert.alert('Erro', 'Não foi possível salvar as preferências');
       } else {
-        console.log('[PREFERÊNCIAS] ✅ Preferências salvas');
         Alert.alert('Sucesso', 'Preferências salvas com sucesso!');
         router.back();
       }
     } catch (e) {
-      console.error('[PREFERÊNCIAS] Erro:', e);
+      logger.error('Erro ao salvar preferências', e);
     }
     
     setSaving(false);

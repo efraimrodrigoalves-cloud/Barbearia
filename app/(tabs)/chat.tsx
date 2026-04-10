@@ -58,7 +58,6 @@ export default function ChatScreen() {
 
     if (profile) {
       setUserRole(profile.role || 'client');
-      logger.info(`[CHAT] Usuário: ${profile.full_name} | Role: ${profile.role}`);
     }
   };
 
@@ -85,39 +84,21 @@ export default function ChatScreen() {
     setLoadingConversations(true);
 
     try {
-      if (userRole === 'admin') {
-        // Admin vê todas as conversas
-        const { data, error } = await supabase
-          .from('conversations')
-          .select(`
-            *,
-            profiles:client_id(id, full_name),
-            barbers(id, name)
-          `)
-          .order('updated_at', { ascending: false });
+      let query = supabase
+        .from('conversations')
+        .select('*, profiles:client_id(id, full_name), barbers(id, name)')
+        .order('updated_at', { ascending: false });
 
-        if (error) {
-          logger.error('Erro ao buscar conversas', error);
-        } else {
-          setConversations(data || []);
-        }
+      if (userRole !== 'admin') {
+        query = query.eq('client_id', currentUser?.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        logger.error('Erro ao buscar conversas', error);
       } else {
-        // Cliente/barbeiro vê apenas suas conversas
-        const { data, error } = await supabase
-          .from('conversations')
-          .select(`
-            *,
-            profiles:client_id(id, full_name),
-            barbers(id, name)
-          `)
-          .eq('client_id', currentUser?.id)
-          .order('updated_at', { ascending: false });
-
-        if (error) {
-          logger.error('Erro ao buscar conversas', error);
-        } else {
-          setConversations(data || []);
-        }
+        setConversations(data || []);
       }
     } catch (e: any) {
       logger.error('Erro ao buscar conversas', e);

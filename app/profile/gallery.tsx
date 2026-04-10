@@ -36,8 +36,7 @@ export default function GalleryScreen() {
      */
     const unsubscribe = NetInfo.addEventListener(state => {
       const connected = state.isConnected && state.isInternetReachable !== false;
-      console.log(`${LOG_PREFIX} Status da rede:`, { isConnected: state.isConnected, isReachable: state.isInternetReachable });
-      setIsOnline(connected);
+      setIsOnline(connected ?? false);
       if (connected && photos.length === 0) {
         console.log(`${LOG_PREFIX} Conexão restaurada, recarregando fotos`);
         loadPhotos();
