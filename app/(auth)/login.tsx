@@ -1,13 +1,17 @@
 import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { logger } from '../../lib/logger';
 
 export default function Login() {
-  logger.screen.render('Login');
+  const hasLoggedMount = useRef(false);
+  if (!hasLoggedMount.current) {
+    logger.screen.render('Login');
+    hasLoggedMount.current = true;
+  }
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

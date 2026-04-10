@@ -6,9 +6,9 @@ import { supabase } from '../../lib/supabase';
 /**
  * Layout das Abas (Tabs)
  * Controla quais abas aparecem baseado no role do usuário
- * - Admin: Início, Agenda, Painel, Perfil
- * - Barbeiro: Início, Agenda, Painel, Perfil
- * - Cliente: Início, Agenda, Perfil
+ * - Admin: Início, Agenda, Chat, Painel, Perfil
+ * - Barbeiro: Início, Agenda, Chat, Painel, Perfil
+ * - Cliente: Início, Agenda, Chat, Perfil
  */
 export default function TabLayout() {
   const [userRole, setUserRole] = useState<'admin' | 'barber' | 'client'>('client');
@@ -70,6 +70,13 @@ export default function TabLayout() {
         options={{
           title: 'Agenda',
           tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: 'Chat',
+          tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'chatbubbles' : 'chatbubbles-outline'} size={24} color={color} />,
         }}
       />
       <Tabs.Screen

@@ -18,6 +18,7 @@ export default function AdminScreen() {
   // ESTADOS PARA CONTROLE DE ACESSO
   // =============================================
   const [userRole, setUserRole] = useState<'admin' | 'barber' | 'client'>('admin');
+  const [profile, setProfile] = useState<any>(null);
   const [permissions, setPermissions] = useState<Record<string, boolean>>({});
   const [loadingPermissions, setLoadingPermissions] = useState(true);
   
@@ -171,7 +172,7 @@ export default function AdminScreen() {
   // =============================================
 
   // Sub-aba do menu "Mais"
-  const [maisSubTab, setMaisSubTab] = useState<'indicacoes' | 'estoque' | 'fidelidade' | 'link' | 'permissoes' | 'chat'>('indicacoes');
+  const [maisSubTab, setMaisSubTab] = useState<'indicacoes' | 'estoque' | 'fidelidade' | 'link' | 'permissoes'>('indicacoes');
 
   // Indicações
   const [referrals, setReferrals] = useState<any[]>([]);
@@ -212,6 +213,21 @@ export default function AdminScreen() {
   const [onlineSalonPhone, setOnlineSalonPhone] = useState('');
   const [onlineSalonAddress, setOnlineSalonAddress] = useState('');
   const [onlineEnabled, setOnlineEnabled] = useState(true);
+
+  // =============================================
+  // ESTADOS PARA CHAT INTERNO
+  // =============================================
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [loadingConversations, setLoadingConversations] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [clientsList, setClientsList] = useState<any[]>([]);
+  const [showNewConversation, setShowNewConversation] = useState(false);
+  const [selectedClientForChat, setSelectedClientForChat] = useState<any>(null);
+  const [selectedBarberForChat, setSelectedBarberForChat] = useState<any>(null);
 
   // =============================================
   // ESTADOS PARA BLOQUEIO DE HORÁRIOS
@@ -2196,8 +2212,164 @@ export default function AdminScreen() {
    */
   const copyBookingLink = () => {
     const link = `https://barbershop-app.com/book`;
-    // Em produção, usar Clipboard do Expo
     Alert.alert('Link Copiado!', `Compartilhe este link:\n${link}`);
+  };
+
+  // =============================================
+  // FUNÇÕES DE CHAT INTERNO
+  // =============================================
+
+  const fetchConversations = async () => {
+    setLoadingConversations(true);
+    logger.info('Buscando conversas...');
+
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select(`
+          *,
+          profiles:client_id(id, full_name, avatar_url),
+          barbers(id, name)
+        `)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        logger.data.fetch('conversations', null, error);
+      } else {
+        logger.data.fetch('conversations', data?.length || 0);
+        setConversations(data || []);
+      }
+    } catch (e: any) {
+      logger.error('Erro ao buscar conversas', e);
+    }
+    setLoadingConversations(false);
+  };
+
+  const fetchClientsForChat = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name, phone, avatar_url')
+      .eq('role', 'client')
+      .order('full_name', { ascending: true });
+
+    if (data) setClientsList(data);
+  };
+
+  const fetchMessages = async (conversationId: string) => {
+    setLoadingMessages(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*, profiles:sender_id(full_name, avatar_url)')
+        .eq('conversation_id', conversationId)
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        logger.error('Erro ao buscar mensagens', error);
+      } else {
+        setMessages(data || []);
+      }
+    } catch (e: any) {
+      logger.error('Erro ao buscar mensagens', e);
+    }
+    setLoadingMessages(false);
+  };
+
+  const openConversation = async (conversation: any) => {
+    setSelectedConversation(conversation);
+    await fetchMessages(conversation.id);
+  };
+
+  const createNewConversation = async () => {
+    if (!selectedClientForChat) {
+      Alert.alert('Erro', 'Selecione um cliente');
+      return;
+    }
+
+    const barberId = selectedBarberForChat?.id || null;
+
+    logger.info(`Criando conversa com cliente: ${selectedClientForChat.full_name}`);
+
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert({
+        client_id: selectedClientForChat.id,
+        barber_id: barberId,
+        status: 'active',
+      })
+      .select(`
+        *,
+        profiles:client_id(id, full_name, avatar_url),
+        barbers(id, name)
+      `)
+      .single();
+
+    if (error) {
+      logger.data.insert('conversations', false, error);
+      Alert.alert('Erro', 'Não foi possível criar a conversa');
+    } else {
+      logger.data.insert('conversations', true);
+      setShowNewConversation(false);
+      setSelectedClientForChat(null);
+      setSelectedBarberForChat(null);
+      setSelectedConversation(data);
+      setMessages([]);
+      fetchConversations();
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation) return;
+
+    setSendingMessage(true);
+
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      const senderId = user.user?.id;
+
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: selectedConversation.id,
+          sender_id: senderId,
+          content: newMessage.trim(),
+          message_type: 'text',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        logger.data.insert('messages', false, error);
+        Alert.alert('Erro', 'Não foi possível enviar a mensagem');
+      } else {
+        setMessages(prev => [...prev, data]);
+        setNewMessage('');
+
+        await supabase
+          .from('conversations')
+          .update({
+            last_message: newMessage.trim(),
+            last_message_at: new Date().toISOString(),
+            last_sender_id: senderId,
+          })
+          .eq('id', selectedConversation.id);
+
+        fetchConversations();
+      }
+    } catch (e: any) {
+      logger.error('Erro ao enviar mensagem', e);
+    }
+    setSendingMessage(false);
+  };
+
+  const closeConversation = () => {
+    setSelectedConversation(null);
+    setMessages([]);
+    setShowNewConversation(false);
+    setSelectedClientForChat(null);
+    setSelectedBarberForChat(null);
   };
 
   const fetchFinanceData = async () => {
@@ -2327,9 +2499,9 @@ export default function AdminScreen() {
         console.log('[ADMIN] Email:', user.email);
 
         // Buscar role do usuário
-        const { data: profile, error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('role, full_name')
+          .select('role, full_name, id, email')
           .eq('id', user.id)
           .single();
 
@@ -2337,10 +2509,11 @@ export default function AdminScreen() {
           console.error('[ADMIN] Erro ao buscar perfil:', profileError);
         }
 
-        console.log('[ADMIN] Perfil encontrado:', JSON.stringify(profile));
+        console.log('[ADMIN] Perfil encontrado:', JSON.stringify(profileData));
 
-        if (profile) {
-          const role = profile.role || 'admin';
+        if (profileData) {
+          setProfile(profileData);
+          const role = profileData.role || 'admin';
           setUserRole(role);
           console.log('[ADMIN] Role definido como:', role);
           
@@ -2496,6 +2669,7 @@ export default function AdminScreen() {
       fetchProducts();
       fetchLoyaltyRewards();
       fetchOnlineConfig();
+      fetchConversations();
     }
   }, [activeTab, userRole, loadingPermissions]);
 
@@ -3252,10 +3426,11 @@ export default function AdminScreen() {
                                 </ScrollView>
                                ) : (
                                  <Text className="text-gray-500 text-sm">Nenhuma foto cadastrada</Text>
-                               )}
-                       </View>
-                     </>
-                   )}
+                                )}
+                      </View>
+                    </>
+                  )}
+             )}
                        </View>
                      )}
                    </View>
@@ -3672,10 +3847,10 @@ export default function AdminScreen() {
                       <Ionicons name="refresh" size={20} color="#d4af37" style={{ marginRight: 8 }} />
                       <Text className="text-[#d4af37] font-bold">Atualizar Dados</Text>
                     </TouchableOpacity>
-                  </>
-                )}
-              </>
-            )}
+                    </>
+                  )}
+                </>
+             )}
 
            {activeTab === 'agenda' && (
               <>
@@ -5627,15 +5802,6 @@ export default function AdminScreen() {
                       <View className="flex-row items-center">
                         <Ionicons name="shield-checkmark" size={16} color={maisSubTab === 'permissoes' ? '#000' : '#d4af37'} style={{ marginRight: 6 }} />
                         <Text className={`font-bold text-sm ${maisSubTab === 'permissoes' ? 'text-black' : 'text-gray-400'}`}>Permissões</Text>
-                      </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      onPress={() => setMaisSubTab('chat')}
-                      className={`px-4 py-3 rounded-xl mr-2 ${maisSubTab === 'chat' ? 'bg-[#d4af37]' : 'bg-[#1e1e1e] border border-gray-800'}`}
-                    >
-                      <View className="flex-row items-center">
-                        <Ionicons name="chatbubbles" size={16} color={maisSubTab === 'chat' ? '#000' : '#d4af37'} style={{ marginRight: 6 }} />
-                        <Text className={`font-bold text-sm ${maisSubTab === 'chat' ? 'text-black' : 'text-gray-400'}`}>Chat</Text>
                       </View>
                     </TouchableOpacity>
                  </ScrollView>
