@@ -57,7 +57,9 @@
     "extra": {
       "eas": {
         "projectId": "seu-project-id-aqui"
-      }
+      },
+      "supabaseUrl": "https://fsyhunabticbctlxreff.supabase.co",
+      "supabaseAnonKey": "sb_publishable_9iRnVWwKIA5YYoau4Lc7xA_WAOlsPh6"
     }
   }
 }
